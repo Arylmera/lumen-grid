@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from ..core import SIZE
+from ..core import SIZE, stamp
 
 N = 30            # frames per loop: the Pixoo 64 replays only the first ~30-32 frames
 TAU = 2 * np.pi
@@ -132,15 +132,6 @@ SERVO = [
     "..b0b..",
     ".g...g.",
 ]
-
-
-def stamp(c: np.ndarray, rows: list[str], top: int, left: int) -> None:
-    """Paint an ASCII map into a char canvas; '.' is transparent; x wraps around the tile."""
-    h, w = c.shape
-    for r, row in enumerate(rows):
-        for col, ch in enumerate(row):
-            if ch != "." and 0 <= top + r < h:
-                c[top + r, (left + col) % w] = ch
 
 
 def _wall() -> np.ndarray:

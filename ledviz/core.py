@@ -32,3 +32,12 @@ def save_gif(frames: list[np.ndarray], path: Path, fps: int = 20, scale: int = 1
         disposal=1,
     )
     return path
+
+
+def stamp(c: np.ndarray, rows: list[str], top: int, left: int) -> None:
+    """Paint an ASCII map into a char canvas; '.' is transparent; x wraps around the tile."""
+    h, w = c.shape
+    for r, row in enumerate(rows):
+        for col, ch in enumerate(row):
+            if ch != "." and 0 <= top + r < h:
+                c[top + r, (left + col) % w] = ch

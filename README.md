@@ -4,9 +4,9 @@ Small living dioramas for the Divoom Pixoo 64. The camera tracks slowly across a
 layers while small details move: candles flicker, smoke rises, a servo-skull bobs past. Every pixel is
 placed in code as a hand-drawn pixel map. The repo has no imported bitmaps. Each GIF loops with no seam.
 
-| Cathedral-ship nave |
-|:-:|
-| ![nave](out/nave_512.gif) |
+| Cathedral-ship nave | Trench at night | Maglev, neon city |
+|:-:|:-:|:-:|
+| ![nave](out/nave_512.gif) | ![trench](out/trench_512.gif) | ![maglev](out/maglev_512.gif) |
 
 ## The scenes
 
@@ -20,6 +20,28 @@ placed in code as a hand-drawn pixel map. The repo has no imported bitmaps. Each
 - In the foreground a dark fluted pillar slides past at twice the speed of the wall, which gives the
   depth. A red banner ripples, a censer swings on its chain and trails incense, and a servo-skull bobs
   by with a blinking red lens.
+
+**Trench at night**: an Imperial Guard firing line in the rain, from the same universe.
+- Far away, a ruined hive city and a cathedral spire burn against the night. Artillery flashes behind them
+  twice per loop, and green enemy tracers come out of the ruins.
+- An illumination flare drifts down trailing smoke, and a searchlight from our lines sweeps the sky.
+- No-man's land slides by in the middle distance: mud, a crater, barbed wire, dead trees.
+- In the trench, which moves at twice that speed, a Guardsman leans over the sandbags and fires
+  las-bolts. Another smokes a lho-stick, its ember glowing on each drag. A commissar in a peaked cap and
+  a red-lined greatcoat watches the line. A lamp flickers on a timber post and rain falls over all of it.
+
+**Maglev, neon city**: a cyberpunk city at night, seen from a train window.
+- The carriage is fixed: the window frame, a hooded passenger with a pulsing cyan visor, and a route
+  ticker scrolling "NEXT SECTOR 7" in amber.
+- Through the glass, the city streams past at three speeds:
+  - Far towers with window grids and blinking aviation lights move 1 px per frame.
+  - Closer towers move 2 px per frame. One carries a vertical neon sign with a stuttering tube, another
+    a cyan BAR sign.
+  - The track pylons whip past at 4 px per frame.
+- Above, an advertising blimp scrolls colour bars through purple smog. Once per loop a flying car
+  overtakes the train.
+- Rain on the glass streaks backward with the speed, and the passenger's rim light shifts between pink,
+  violet and cyan as the neon goes by.
 
 ## Run
 
@@ -40,10 +62,10 @@ python -m pytest -q              # Pixoo limits, ≤ 5 MB, square, seamless loop
 - **Pixel maps, not geometry.** Each layer is a grid of characters, one per palette colour, drawn like a
   sprite in a pixel editor. The code only scrolls the layers, cycles the light colours and places the
   moving props.
-- **Parallax that loops exactly.** The void behind the ports stays fixed on screen: stars at infinity
-  don't move when the camera moves. The wall moves 1 px per frame and repeats every 30 px. The
-  foreground moves 2 px per frame and repeats every 60 px. In 30 frames each layer shifts exactly one
-  tile, and every other motion (flicker, smoke, sway, bob, blink) has a period that divides 30. A test
+- **Parallax that loops exactly.** Far layers stay fixed on screen, the way stars at infinity don't move
+  when the camera moves. Nearer layers move 1, 2 or 4 px per frame and repeat every 30, 60 or 120 px.
+  In 30 frames each layer shifts exactly one tile, and every other motion (flicker, smoke, sway, bob,
+  blink, rain) has a period that divides 30. A test
   checks that frame 30 is identical to frame 0. The test was mutation-proven: a pan that stops one pixel
   short makes it fail.
 - **Built for the Pixoo.** The device replays only the first 30–32 frames of a GIF, so each scene is
@@ -52,8 +74,10 @@ python -m pytest -q              # Pixoo limits, ≤ 5 MB, square, seamless loop
   means the LED is off. Light comes from small saturated sources.
 
 ```
-ledviz/core.py          grid size, GIF export
+ledviz/core.py          grid size, GIF export, pixel-map stamp
 ledviz/scenes/nave.py   cathedral-ship nave
+ledviz/scenes/trench.py Imperial Guard trench at night
+ledviz/scenes/maglev.py cyberpunk city from a maglev window
 ledviz/effects.py       scene registry (frames, fps)
 render.py               CLI renderer
 tests/                  Pixoo limits + seamless-loop check
@@ -61,7 +85,7 @@ tests/                  Pixoo limits + seamless-loop check
 
 ## Credits
 
-- Unofficial fan art inspired by the Warhammer 40,000 universe. It is not affiliated with or endorsed by
+- The nave and the trench are unofficial fan art inspired by the Warhammer 40,000 universe. It is not affiliated with or endorsed by
   Games Workshop. Everything is drawn from scratch; no official artwork, logos or assets are used.
 - Target hardware: [Divoom Pixoo 64](https://divoom.com/products/pixoo-64).
 - [Pillow](https://python-pillow.org/) and [NumPy](https://numpy.org/).
