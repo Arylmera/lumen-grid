@@ -347,7 +347,7 @@ def _arms(c: np.ndarray, i: int, beat: str) -> None:
 
 def _confetti(c: np.ndarray, i: int) -> None:
     for k, (x, y0) in enumerate(((1, 0), (4, -5), (12, 2), (16, -3), (20, 0), (7, -1), (2, -9), (18, -8))):
-        y = y0 + 2 * ((i - PASS) % N)                               # 2 px/frame, only during PASS
+        y = y0 + 2 * ((i - PASS) % N)                           # 2 px/frame, only during PASS
         if 0 <= y < 11:
             c[y:y + 2, x:x + 2] = RAINBOW[(k + i) % 6]
 
