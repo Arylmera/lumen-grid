@@ -53,7 +53,8 @@ def main() -> None:
     print(f"\n{'proxy':<10} {'value':>10} {'threshold':>14}  ok")
     for proxy, (op, bound) in THRESHOLDS.items():
         ok = passes(proxy, m[proxy])
-        print(f"{proxy:<10} {m[proxy]:>10.4f} {op:>4} {bound:>9}  {'PASS' if ok else 'FAIL'}")
+        bound_str = f"{bound:.2f}" if isinstance(bound, float) else str(bound)
+        print(f"{proxy:<10} {m[proxy]:>10.4f} {op:>4} {bound_str:>9}  {'PASS' if ok else 'FAIL'}")
 
 
 if __name__ == "__main__":

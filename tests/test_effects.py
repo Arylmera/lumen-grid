@@ -5,19 +5,9 @@ from PIL import Image
 
 from ledviz.core import MAX_BYTES, SIZE, save_gif
 from ledviz.effects import EFFECTS
-from conftest import PENDING
-
-SEAM_CASES = [
-    pytest.param(
-        name,
-        marks=[pytest.mark.xfail(strict=True, reason=f"{name}: known seam failure, see PENDING")]
-        if "seam" in PENDING.get(name, ()) else [],
-    )
-    for name in sorted(EFFECTS)
-]
 
 
-@pytest.mark.parametrize("name", SEAM_CASES)
+@pytest.mark.parametrize("name", sorted(EFFECTS))
 def test_loop_is_seamless(name):
     """Frame n must be frame 0 exactly, so the GIF's wrap from n-1 to 0 is an ordinary step.
     (A mean-difference check is blind on a pan: every step is already large.)"""
