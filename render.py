@@ -1,7 +1,7 @@
 """Render every effect to out/.
 
     python render.py                 # 64x64 GIFs (what the LED panel shows) + 512x512 previews
-    python render.py --only terra    # one effect
+    python render.py --only neon     # one effect
 """
 from __future__ import annotations
 

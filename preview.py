@@ -1,6 +1,6 @@
 """Contact-sheet preview for one scene, for eyeballing it before trusting the rubric numbers.
 
-    python preview.py <name> [--out PATH]   # default out/<name>_sheet.png
+    python preview.py <name> [--out PATH]   # default out/<name>_sheet.png next to this script
 
 All 30 frames, 4x nearest-neighbour, laid out 6 columns x 5 rows with a 2 px black gutter.
 Also prints the rubric metrics table for the scene.
@@ -44,7 +44,7 @@ def main() -> None:
 
     fn, n, _ = EFFECTS[args.name]
     frames = [fn(i, n) for i in range(n)]
-    out = args.out or Path("out") / f"{args.name}_sheet.png"
+    out = args.out or Path(__file__).parent / "out" / f"{args.name}_sheet.png"
     out.parent.mkdir(parents=True, exist_ok=True)
     Image.fromarray(_sheet(frames), "RGB").save(out)
     print(f"wrote {out}")
