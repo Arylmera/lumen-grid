@@ -121,13 +121,13 @@ LASER = [  # far arm: red housing, turbo-laser barrel with cooling rings and a l
     "aAAAAAAAamMMMMgMMMMgMMMSS",
     "aaaaaaaaa................",
 ]
-BANNER = [  # hangs between the hips: gold-edged black field, gold skull-cog, red band, swallowtail
-    "ggggggg",
-    "g0ggg0g",
-    "ggggggg",
-    "gg0g0gg",
-    "ggggggg",
-    "g0g0g0g",
+BANNER = [  # hangs between the hips: outlined gold skull, gold-edged black field, red band, swallowtail
+    "0ggggg0",  # skull: rounded dome, eye sockets, nose, cheeks, teeth; black corners and the
+    "ggggggg",  # black row under the teeth keep it apart from the gold border
+    "g00g00g",
+    "ggg0ggg",
+    "0ggggg0",
+    "0g0g0g0",
     "g00000g",
     "gAAAAAg",
     "gAAAAAg",
