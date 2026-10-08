@@ -29,7 +29,7 @@ PAL = {
     "0": (0, 0, 0),
     "b": (34, 46, 150), "B": (70, 100, 255),                       # tower and roof outlines
     "M": (255, 36, 170), "m": (120, 14, 84),                       # magenta neon lit / failing
-    "C": (40, 230, 255), "c": (24, 60, 170),                       # cyan neon, noodle bar glass
+    "C": (40, 230, 255), "c": (24, 60, 170),                       # cyan neon; deep blue: glass, frames, splashes, searchlight
     "Y": (255, 206, 40), "O": (255, 120, 20), "o": (190, 60, 10),  # yellow, door glow
     "R": (255, 36, 36), "r": (90, 8, 12), "Q": (255, 36, 36),      # blinking red / off / steady red neon
     "P": (255, 120, 220),                                          # pale pink: awning, umbrella panels
@@ -39,10 +39,9 @@ PAL = {
 }
 CHASE = [(40, 230, 255), (255, 255, 255), (255, 206, 40)]          # umbrella hem colour chase
 POOL = (120, 20, 90)                                               # umbrella light on the wet street
-REFLECT = np.array([(0, 0, 0), (12, 22, 70), (26, 44, 110), (16, 70, 90), (24, 110, 120), (80, 14, 60),
-                    (120, 20, 90), (110, 80, 16), (120, 56, 10), (100, 14, 16), (60, 24, 100), (110, 110, 120)], float)
-# ripple: bands of 3 rows sway together; a 15-frame table so the loop closes exactly
-RIPPLE = np.rint(np.sin(TAU * np.arange(15)[:, None] / 15 + np.arange(7)[None] * 1.3)).astype(int)
+REFLECT = np.array([(0, 0, 0), (26, 44, 110), (24, 110, 120), (120, 20, 90), (120, 56, 10), (60, 24, 100)], float)
+# ripple: 3 bands of 7 rows sway together; a 15-frame table so the loop closes exactly
+RIPPLE = np.rint(np.sin(TAU * np.arange(15)[:, None] / 15 + np.arange(3)[None] * 2.1)).astype(int)
 
 GLYPHS = [["M.M", "MMM", "M.M"], ["MMM", ".M.", "MMM"], ["M..", "MMM", "..M"], ["MMM", "M.M", "MMM"]]
 CODE = [["..G", ".G.", "G..", ".G.", "..G"],    # the rooftop sign: </>
@@ -106,7 +105,17 @@ LEGS = [  # near leg V, far leg d; the second half of the cycle swaps them
      "........dV.............", "........dVV............"],                               # passing
 ]
 WALKER_X = 15
-DRONE = [".BBBBB.", "BRBBBXB", ".B...B."]
+DRONE = [  # police drone: rotors, white hull, 2 px red/blue strobes, searchlight cone below
+    "WWW...WWW",
+    "..BWWWB..",
+    "RRWWWWWXX",
+    "..B...B..",
+    "...ccc...",
+    "..ccccc..",
+    ".ccccccc.",
+]
+DRONE_Y = 9               # flies above the umbrella (rows 17-27) for the whole pass
+SPLASH_POSES = [["C", "C"], ["C.C", "ccc"]]   # spurt, then crown
 
 
 def _far() -> np.ndarray:
@@ -130,10 +139,10 @@ def _mid() -> np.ndarray:
         c[top, x0:x1 + 1] = "B"
         c[top:CURB, x0], c[top:CURB, x1] = "b", "b"
     # A: vertical sign and a glowing doorway under a striped awning
-    c[15, 3:10], c[38, 3:10] = "M", "M"
-    c[15:39, 3], c[15:39, 9] = "M", "M"
+    c[13, 3:10], c[36, 3:10] = "M", "M"
+    c[13:37, 3], c[13:37, 9] = "M", "M"
     for n, g in enumerate(GLYPHS):
-        stamp(c, g, 17 + 5 * n, 5)
+        stamp(c, g, 15 + 5 * n, 5)
     c[31, 11:19] = ["P", "M"] * 4
     c[32:CURB, 12:18] = "O"
     c[32:CURB, 12], c[32:CURB, 17] = "o", "o"
@@ -143,7 +152,7 @@ def _mid() -> np.ndarray:
     c[8, 24:39], c[16, 24:39] = "c", "c"
     c[8:17, 24], c[8:17, 38] = "c", "c"
     c[17, 26], c[17, 36] = "c", "c"
-    stamp(c, BOWL_BASE, 27, 25)
+    stamp(c, BOWL_BASE, 23, 25)
     c[34, 24:38], c[CURB - 1, 24:38] = "U", "U"
     c[34:CURB, 24], c[34:CURB, 37] = "U", "U"
     c[35:CURB - 1, 25:37] = "c"
@@ -151,7 +160,7 @@ def _mid() -> np.ndarray:
         c[37:40, hx:hx + 2] = "0"
         c[40:CURB - 1, hx - 1:hx + 3] = "0"
     # C: waving neon cat over a vending machine
-    stamp(c, CAT, 15, 46)
+    stamp(c, CAT, 11, 46)
     c[32, 46:56], c[CURB - 1, 46:56] = "M", "M"
     c[32:CURB, 46], c[32:CURB, 55] = "M", "M"
     for y in range(34, 41, 3):
@@ -183,8 +192,8 @@ def _paint(img: np.ndarray, chars: np.ndarray, i: int, phase: np.ndarray) -> Non
 
 def _mid_frame(i: int) -> np.ndarray:
     c = MID.copy()
-    stamp(c, PAW[(i // 5) % 2], 22, 55)              # paw waves every 5 frames
-    stamp(c, BOWL[(i // 5) % 2], 22, 27)             # steam wisps sway every 5 frames
+    stamp(c, PAW[(i // 5) % 2], 18, 55)              # paw waves every 5 frames
+    stamp(c, BOWL[(i // 5) % 2], 18, 27)             # steam wisps sway every 5 frames
     lit = 1 + min(2, (i % 15) // 3)                  # </> tubes light one by one, then hold
     for n, g in enumerate(CODE[:lit]):
         stamp(c, g, 10, 26 + 4 * n)
@@ -201,18 +210,23 @@ def _walker(img: np.ndarray, i: int) -> None:
     h, w = len(rows), len(rows[0])
     sprite = np.array([list(r) for r in rows])
     mask = sprite != "."
-    ring = np.zeros((h + 2, w + 2), bool)            # 1 px black keyline separates the hero
-    for dy, dx in ((0, 1), (1, 0), (1, 1), (1, 2), (2, 1)):
-        ring[dy:dy + h, dx:dx + w] |= mask
-    for r in range(h + 2):
-        for col in range(w + 2):
-            y, x = top - 1 + r, WALKER_X - 1 + col
+    plus = ((0, 1), (1, 0), (1, 1), (1, 2), (2, 1))
+    ring = np.zeros((h + 4, w + 4), bool)            # black keyline separates the hero:
+    for dy, dx in plus:                              # 1 px round the figure,
+        ring[dy + 1:dy + 1 + h, dx + 1:dx + 1 + w] |= mask
+    dome = np.zeros_like(ring)                       # 2 px halo round the umbrella dome
+    dome[1:len(UMBRELLA) + 3] = ring[1:len(UMBRELLA) + 3]
+    for dy, dx in plus:
+        ring[dy:dy + h + 2, dx:dx + w + 2] |= dome[1:h + 3, 1:w + 3]
+    for r in range(h + 4):
+        for col in range(w + 4):
+            y, x = top - 2 + r, WALKER_X - 2 + col
             if not (0 <= y < CURB and 0 <= x < SIZE):
                 continue
-            inside = 1 <= r <= h and 1 <= col <= w and mask[r - 1, col - 1]
+            inside = 2 <= r < h + 2 and 2 <= col < w + 2 and mask[r - 2, col - 2]
             if inside:
-                ch = sprite[r - 1, col - 1]
-                img[y, x] = CHASE[(col - i) % 3] if ch == "E" else PAL[ch]
+                ch = sprite[r - 2, col - 2]
+                img[y, x] = CHASE[(col - 1 - i) % 3] if ch == "E" else PAL[ch]
             elif ring[r, col]:
                 img[y, x] = 0
 
@@ -236,12 +250,12 @@ def frame(i: int, n: int = N) -> np.ndarray:
                 img[1 + r, kx + col] = PAL[ch]
     mx = np.broadcast_to((xs + 2 * i) % MID_W, (SIZE, SIZE))
     _paint(img, _mid_frame(i)[:, mx[0]], i, mx)
-    dx = -10 + 3 * (i % N)                           # police drone, red/blue strobe
+    dx = -10 + 3 * (i % N)                           # police drone, red/blue strobe alternates
+    lit = {"R": PAL["R"] if i % 2 else PAL["r"], "X": PAL["B"] if i % 2 == 0 else PAL["c"]}
     for r, row in enumerate(DRONE):
         for col, ch in enumerate(row):
             if ch != "." and 0 <= dx + col < SIZE:
-                lit = {"R": PAL["R"] if i % 2 else PAL["r"], "X": PAL["B"] if i % 2 == 0 else PAL["b"]}
-                img[20 + r, dx + col] = lit.get(ch, PAL["b"])
+                img[DRONE_Y + r, dx + col] = lit.get(ch) or PAL[ch]
     for y0, x in RAIN:                               # rain: 4 px/frame, wraps every 60 rows
         y = (y0 + 4 * i) % 60
         for d, col in ((0, (110, 170, 255)), (1, (40, 70, 150))):
@@ -251,16 +265,17 @@ def frame(i: int, n: int = N) -> np.ndarray:
     img[CURB] = PAL["m"]                             # wet kerb catching the magenta glow
     # street: mirror rows above the kerb, rippling, darkened onto a small reflection palette
     for y in range(CURB + 1, SIZE):
-        row = np.roll(img[2 * CURB - y], RIPPLE[i % 15, (y - CURB) // 3], axis=0) * 0.45
+        row = np.roll(img[2 * CURB - y], RIPPLE[i % 15, (y - CURB) // 7], axis=0) * 0.45
         d = ((row[:, None, :] - REFLECT[None]) ** 2).sum(-1)
         img[y] = REFLECT[d.argmin(1)]
     _pool(img)
     for y0, x0, ph in SPLASH:                        # rain splashes on the puddles
         t = (i + ph) % 10
-        if t == 0:
-            img[y0, x0] = PAL["C"]
-        elif t == 1:
-            for ddx in (-1, 1):
-                if 0 <= x0 + ddx < SIZE:
-                    img[y0, x0 + ddx] = PAL["c"]
+        if t < 2:
+            pose = SPLASH_POSES[t]
+            for r, row in enumerate(pose):
+                for col, ch in enumerate(row):
+                    x = x0 - len(row) // 2 + col
+                    if ch != "." and 0 <= x < SIZE:
+                        img[y0 - len(pose) + 1 + r, x] = PAL[ch]
     return np.clip(img, 0, 255).astype(np.uint8)
