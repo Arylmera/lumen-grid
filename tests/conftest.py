@@ -5,7 +5,6 @@ a listed scene that starts passing everything turns the suite red as a reminder 
 """
 
 PENDING = {
-    "titan": {"seam"},                                          # fixed in Task 3
     "nave": {"black", "dim", "saturation", "peak"},             # removed in Task 5
     "trench": {"black", "dim", "saturation", "vivid", "peak"},  # removed in Task 5
     "maglev": {"black", "dim", "saturation", "vivid"},          # removed in Task 5
