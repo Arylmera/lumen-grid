@@ -18,7 +18,8 @@ tracks them down the block.
   cyan searchlight strobes red and blue on another pass.
 - The shopfronts carry a stuttering vertical glyph sign, a rooftop `</>` sign whose tubes light
   up one at a time, a filled ramen bowl with rising steam, and a waving neon cat over a vending
-  machine. Towers further back carry blinking aviation lights.
+  machine. Under the ramen bowl, two diners sit in the noodle bar window. Towers further back
+  carry blinking aviation lights.
 - Rain streaks fall behind the walker, and the wet street mirrors the whole scene in a rippling
   reflection.
 
@@ -44,6 +45,8 @@ pass.
 - On the desk, an RGB keyboard chases the Google colours, a rubber duck hops on the PASS beat,
   and a mug labelled OIL steams. Through the window behind the monitor, a moonlit skyline
   twinkles.
+- Under the desk, the robot taps its foot next to its office chair. A server rack blinks its
+  LEDs, and the monitor cable runs down to it, carrying data pulses.
 
 ## Run
 
@@ -67,9 +70,11 @@ python -m pytest -q              # Pixoo limits, rubric gate, ≤ 5 MB, square, 
   Procedural code is used only for motion, flicker, colour cycling, and simple geometry.
 - **Parallax that loops exactly.** Far layers move 1 px per frame on a 30 px tile, nearer
   layers move 2 px per frame on a 60 px tile, and the fastest layers move faster still on a
-  tile that is still a multiple of 30. `frame(i)` never wraps `i` (no `i %= n`): every motion is
-  periodic in 30 by construction, so `frame(30)` equals `frame(0)` exactly, and the GIF's wrap
-  from the last frame back to the first is an ordinary step. `tests/test_effects.py` checks this
+  tile that is still a multiple of 30. `frame(i)` never wraps `i` up front (no `i %= n`): every
+  continuous motion is periodic in 30 by construction. Only the one-shot events read the loop
+  clock `i % 30`: the koi and drone passes, the laser shots, and the robot's story beats. So
+  `frame(30)` equals `frame(0)` exactly, and the GIF's wrap from the last frame back to the
+  first is an ordinary step. `tests/test_effects.py` checks this
   for every scene. The check is mutation-proven: a pan that stops one pixel short, or a drift
   term like `i // 2`, makes it fail.
 - **Built for the Pixoo.** The device replays only the first 30 to 32 frames of a GIF, so each
@@ -86,7 +91,7 @@ python -m pytest -q              # Pixoo limits, rubric gate, ≤ 5 MB, square, 
   1:1 pixel scale before trusting the numbers alone.
 
 ```
-ledviz/core.py          grid size, GIF export, pixel-map stamp
+ledviz/core.py          grid size, GIF export, pixel-map stamp, blit and keyline
 ledviz/rubric.py         contest rubric proxies and thresholds
 ledviz/scenes/neon.py    Neon Rain
 ledviz/scenes/titan.py   Titan
