@@ -19,7 +19,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from ..core import SIZE, stamp
+from ..core import SIZE, blit, keyline, stamp
 
 N = 30
 ENTER, PASS = 16, 22          # beats: Enter is slammed at f16, the tests pass at f22 (to f28)
@@ -176,14 +176,6 @@ def _text(c: np.ndarray, s: str, top: int, left: int, ch: str) -> None:
         left += len(glyph[0]) + 1
 
 
-def _blit(c: np.ndarray, rows: list[str], top: int, left: int) -> None:
-    """stamp() without the x wrap: screen-space sprites clip at the edges."""
-    for r, row in enumerate(rows):
-        for col, ch in enumerate(row):
-            if ch != "." and 0 <= top + r < SIZE and 0 <= left + col < SIZE:
-                c[top + r, left + col] = ch
-
-
 def _seg(c: np.ndarray, p0: tuple, p1: tuple, ch: str) -> None:
     """A 2 px thick straight limb from p0 to p1."""
     (x0, y0), (x1, y1) = p0, p1
@@ -197,12 +189,7 @@ def _seg(c: np.ndarray, p0: tuple, p1: tuple, ch: str) -> None:
 def _keyline(c: np.ndarray, layer: np.ndarray) -> None:
     """Paint a layer over c with a 1 px black outline cut into whatever lies behind."""
     mask = layer != "."
-    ring = mask.copy()
-    ring[1:] |= mask[:-1]
-    ring[:-1] |= mask[1:]
-    ring[:, 1:] |= mask[:, :-1]
-    ring[:, :-1] |= mask[:, 1:]
-    c[ring] = "0"
+    c[keyline(mask)] = "0"
     c[mask] = layer[mask]
 
 
@@ -278,8 +265,8 @@ def _window(c: np.ndarray, i: int) -> None:
     c[1, 53:64], c[16, 53:64] = "v", "v"
     c[1:17, 53] = "v"
     c[1:17, 63] = "v"
-    _blit(c, MOON, 3, 55)
-    _blit(c, SKYLINE, 10, 54)
+    blit(c, MOON, 3, 55)
+    blit(c, SKYLINE, 10, 54)
     for y, x, ph in STARS:
         t = (i + 3 * ph) % 10
         if t < 7:
@@ -300,18 +287,18 @@ def _steam(c: np.ndarray, i: int) -> None:
 def _robot(c: np.ndarray, i: int, beat: str) -> None:
     lift = -(i % 2 == 0) if beat == "pass" else 0              # hops on PASS
     body = np.full((SIZE, SIZE), ".", "<U1")
-    _blit(body, TORSO, 26 + lift, 3)
+    blit(body, TORSO, 26 + lift, 3)
     for n, x in enumerate((8, 10, 12)):                         # chest LEDs run a little scan
         body[30 + lift, x] = "G" if (i + n) % 3 == 0 else "g"
-    _blit(body, HEAD, 13 + lift, 2)
+    blit(body, HEAD, 13 + lift, 2)
     nod = 1 if beat == "type" and i % 6 in (2, 3) else 0        # nods along while typing
     if nod:
         body[13:27] = np.roll(body[13:27], 1, axis=0)
         body[13] = "."
     face = {"type": "blink" if i % N in (8, 26) else "look", "wind": "look", "slam": "focus",
             "run": "focus", "pass": "happy"}[beat]
-    _blit(body, FACES[face], 17 + lift + nod, 7)
-    _blit(body, ANTENNA, 6 + lift + nod, 7)
+    blit(body, FACES[face], 17 + lift + nod, 7)
+    blit(body, ANTENNA, 6 + lift + nod, 7)
     if beat == "run" and (i - ENTER) % N >= 2:                  # a nervous drop of sweat runs down
         y = 14 + (i - ENTER) % N                                # a teardrop on the visor side
         body[y:y + 2, 18:20] = "E"
@@ -345,9 +332,9 @@ def _arms(c: np.ndarray, i: int, beat: str) -> None:
         lit = (arm != ".") & np.vstack([np.ones((1, SIZE), bool), arm[:-1] == "."])
         arm[lit] = hi                                           # top edge lit, like a tube
         if shade == "B":                                        # shoulder ball
-            _blit(arm, [".B.", "BHB", ".B."], sy - 1 + dy, sx - 1)
+            blit(arm, [".B.", "BHB", ".B."], sy - 1 + dy, sx - 1)
         rows = HAND if shade == "d" else HANDS.get(near, HAND)
-        _blit(arm, [r.translate(str.maketrans({"H": hi, "B": shade})) for r in rows], hy + dy, hx)
+        blit(arm, [r.translate(str.maketrans({"H": hi, "B": shade})) for r in rows], hy + dy, hx)
         _keyline(c, arm)
     if beat == "type":                                          # the struck key lights up
         c[39, NEAR["down"][2][0] if i % 2 == 0 else FAR["down"][2][0] + 1] = "W"
@@ -400,7 +387,7 @@ def _under(c: np.ndarray, i: int) -> None:
         up = tap if shade == "B" else 0
         leg[DESK + 6:57, x:x + 3] = shade                       # shin
         leg[DESK + 6:57, x] = hi
-        _blit(leg, [".BBB.", "BHBBB", ".BBB."], DESK + 5, x - 1)   # knee
+        blit(leg, [".BBB.", "BHBBB", ".BBB."], DESK + 5, x - 1)   # knee
         leg[56 - up, x:x + 3] = "n" if shade == "B" else "0"    # ankle joint
         leg[57 - up:60 - up, x - 1:toe] = shade                 # boot, toe towards the desk
         leg[57 - up, x:toe - 1] = hi
@@ -436,10 +423,10 @@ def frame(i: int, n: int = N) -> np.ndarray:
     _robot(c, i, beat)
     _desk(c)
     _keyboard(c, i, beat)
-    _blit(c, MUG, 28, 51)
+    blit(c, MUG, 28, 51)
     _text(c, "OIL", 31, 54, "Y")
     hop = 2 if beat == "pass" and i % 2 == 0 else 0
-    _blit(c, DUCK, 31 - hop, 43)
+    blit(c, DUCK, 31 - hop, 43)
     _arms(c, i, beat)
     if beat == "pass":
         _confetti(c, i)

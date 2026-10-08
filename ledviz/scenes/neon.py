@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from ..core import SIZE, stamp
+from ..core import SIZE, blit, keyline, stamp
 
 N = 30
 TAU = 2 * np.pi
@@ -209,14 +209,10 @@ def _walker(img: np.ndarray, i: int) -> None:
     h, w = len(rows), len(rows[0])
     sprite = np.array([list(r) for r in rows])
     mask = sprite != "."
-    plus = ((0, 1), (1, 0), (1, 1), (1, 2), (2, 1))
-    ring = np.zeros((h + 4, w + 4), bool)            # black keyline separates the hero:
-    for dy, dx in plus:                              # 1 px round the figure,
-        ring[dy + 1:dy + 1 + h, dx + 1:dx + 1 + w] |= mask
-    dome = np.zeros_like(ring)                       # 2 px halo round the umbrella dome
+    ring = keyline(np.pad(mask, 2))                  # black keyline separates the hero: 1 px round
+    dome = np.zeros_like(ring)                       # the figure, 2 px round the umbrella dome
     dome[1:len(UMBRELLA) + 3] = ring[1:len(UMBRELLA) + 3]
-    for dy, dx in plus:
-        ring[dy:dy + h + 2, dx:dx + w + 2] |= dome[1:h + 3, 1:w + 3]
+    ring |= keyline(dome)
     for r in range(h + 4):
         for col in range(w + 4):
             y, x = top - 2 + r, WALKER_X - 2 + col
@@ -243,18 +239,12 @@ def frame(i: int, n: int = N) -> np.ndarray:
     fx = np.broadcast_to((xs + i) % FAR_W, (SIZE, SIZE))
     _paint(img, FAR[:, fx[0]], i, fx)
     kx = 64 - 3 * (i % N)                            # koi crosses the sky once per loop (off-screen at the wrap)
-    for r, row in enumerate(KOI[(i // 3) % 2]):
-        for col, ch in enumerate(row):
-            if ch != "." and 0 <= kx + col < SIZE:
-                img[1 + r, kx + col] = PAL[ch]
+    blit(img, KOI[(i // 3) % 2], 1, kx, PAL)
     mx = np.broadcast_to((xs + 2 * i) % MID_W, (SIZE, SIZE))
     _paint(img, _mid_frame(i)[:, mx[0]], i, mx)
     dx = 64 - 3 * ((i + 15) % N)                     # police drone patrols left, red/blue strobe alternates
     lit = {"R": PAL["R"] if i % 2 else PAL["r"], "X": PAL["B"] if i % 2 == 0 else PAL["c"]}
-    for r, row in enumerate(DRONE):
-        for col, ch in enumerate(row):
-            if ch != "." and 0 <= dx + col < SIZE:
-                img[DRONE_Y + r, dx + col] = lit.get(ch) or PAL[ch]
+    blit(img, DRONE, DRONE_Y, dx, {**PAL, **lit})
     for y0, x in RAIN:                               # rain: 4 px/frame, wraps every 60 rows
         y = (y0 + 4 * i) % 60
         for d, col in ((0, (110, 170, 255)), (1, (40, 70, 150))):
@@ -271,10 +261,6 @@ def frame(i: int, n: int = N) -> np.ndarray:
     for y0, x0, ph in SPLASH:                        # rain splashes on the puddles
         t = (i + ph) % 10
         if t < 2:
-            pose = SPLASH_POSES[t]
-            for r, row in enumerate(pose):
-                for col, ch in enumerate(row):
-                    x = x0 - len(row) // 2 + col
-                    if ch != "." and 0 <= x < SIZE:
-                        img[y0 - len(pose) + 1 + r, x] = PAL[ch]
+            pose = SPLASH_POSES[t]                   # centred on x0, standing on row y0
+            blit(img, pose, y0 - len(pose) + 1, x0 - len(pose[0]) // 2, PAL)
     return np.clip(img, 0, 255).astype(np.uint8)

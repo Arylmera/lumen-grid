@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import numpy as np
 
-from ..core import SIZE, stamp
+from ..core import SIZE, blit, keyline, stamp
 
 N = 30
 HIVE_W, RUB_W = 30, 60
@@ -318,13 +318,7 @@ def _titan(img: np.ndarray, i: int) -> dict:
     _part(c, HEAD, oy + 8, OX + 25)
     _part(c, BOLTER, oy + 18, bx)
     _part(c, PAULDRON, oy + 9, OX + 11)
-    mask = c != "."
-    ring = mask.copy()                              # 1 px black keyline round the whole machine
-    ring[1:] |= mask[:-1]
-    ring[:-1] |= mask[1:]
-    ring[:, 1:] |= mask[:, :-1]
-    ring[:, :-1] |= mask[:, 1:]
-    img[ring & ~mask] = 0
+    img[keyline(c != ".")] = 0                      # 1 px black keyline round the whole machine
     _paint(img, c, i, np.zeros((SIZE, SIZE), int))
     return {"laser": (oy + 19, lx + len(LASER[2])),
             "bolter": (oy + 23, bx + len(BOLTER[3]))}
@@ -356,10 +350,7 @@ def frame(i: int, n: int = N) -> np.ndarray:
             for col, ch in enumerate(row):
                 if ch != ".":
                     img[top + r - 1:top + r + 2, max(x + col - 1, 0):max(x + col + 2, 0)] = 0
-        for r, row in enumerate(pose):
-            for col, ch in enumerate(row):
-                if ch != "." and 0 <= x + col < SIZE:
-                    img[top + r, x + col] = PAL[ch]
+        blit(img, pose, top, x, PAL)
     guns = _titan(img, i)
     tip_y, tip_x = guns["laser"]
     for f0 in SHOTS:                               # turbo-laser: charge glow, white core, magenta falloff

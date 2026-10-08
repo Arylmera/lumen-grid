@@ -41,3 +41,24 @@ def stamp(c: np.ndarray, rows: list[str], top: int, left: int) -> None:
         for col, ch in enumerate(row):
             if ch != "." and 0 <= top + r < h:
                 c[top + r, (left + col) % w] = ch
+
+
+def blit(c: np.ndarray, rows: list[str], top: int, left: int, pal: dict | None = None) -> None:
+    """stamp() without the x wrap: a screen-space sprite clips at the edges. With pal, each char
+    is written as pal[char] (an RGB canvas); without it, as the char itself (a char canvas)."""
+    h, w = c.shape[:2]
+    for r, row in enumerate(rows):
+        for col, ch in enumerate(row):
+            if ch != "." and 0 <= top + r < h and 0 <= left + col < w:
+                c[top + r, left + col] = ch if pal is None else pal[ch]
+
+
+def keyline(mask: np.ndarray) -> np.ndarray:
+    """The mask grown by 1 px (4-neighbour): paint the result black, then the sprite over it,
+    for a 1 px black outline that separates the sprite from whatever lies behind."""
+    ring = mask.copy()
+    ring[1:] |= mask[:-1]
+    ring[:-1] |= mask[1:]
+    ring[:, 1:] |= mask[:, :-1]
+    ring[:, :-1] |= mask[:, 1:]
+    return ring
