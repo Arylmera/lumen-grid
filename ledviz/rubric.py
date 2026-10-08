@@ -1,5 +1,6 @@
-"""Contest rubric proxies (see .superpowers/sdd/global-constraints.md) computed over a clip's
-frames. `metrics()` returns the raw numbers; `THRESHOLDS` holds the pass/fail bar for each."""
+"""Contest rubric proxies (see docs/superpowers/plans/2026-10-08-dioramas-v3.md, section Global
+Constraints) computed over a clip's frames. `metrics()` returns the raw numbers; `THRESHOLDS`
+holds the pass/fail bar for each."""
 from __future__ import annotations
 
 import numpy as np
@@ -11,8 +12,8 @@ THRESHOLDS = {
     "saturation": ("ge", 0.70),   # mean HSV saturation of lit pixels (max channel >= 24)
     "vivid": ("ge", 0.10),        # fraction with saturation > 0.6 and max channel > 120
     "peak": ("ge", 230.0),        # 95th-percentile max channel of lit pixels
-    "motion": ("ge", 3.0),        # mean absolute frame-to-frame difference
-    "min_step": ("gt", 0.0),      # smallest mean step between consecutive frames (no duplicates)
+    "motion": ("ge", 3.0),        # mean absolute frame-to-frame difference, wrap step included
+    "min_step": ("gt", 0.0),      # smallest mean step between consecutive frames, wrap included (no duplicates)
     "colours": ("le", 64),        # unique RGB colours across all frames
 }
 
@@ -33,7 +34,8 @@ def metrics(frames: np.ndarray) -> dict:
     vivid = float(((sat > 0.6) & (maxc > 120)).mean())
     peak = float(np.percentile(maxc[lit], 95)) if lit.any() else 0.0
 
-    steps = np.abs(frames[1:].astype(int) - frames[:-1].astype(int)).mean(axis=(1, 2, 3))
+    # cyclic: the last step is the wrap from frame n-1 to frame 0, so a stutter at the loop point fails
+    steps = np.abs(np.roll(frames, -1, 0).astype(int) - frames.astype(int)).mean(axis=(1, 2, 3))
     motion = float(steps.mean()) if len(steps) else 0.0
     min_step = float(steps.min()) if len(steps) else 0.0
 

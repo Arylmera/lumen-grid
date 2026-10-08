@@ -1,5 +1,6 @@
-"""Contest rubric proxy gate (see .superpowers/sdd/global-constraints.md). Every registered
-scene must pass every proxy in ledviz.rubric.THRESHOLDS, measured over all its frames.
+"""Contest rubric proxy gate (see docs/superpowers/plans/2026-10-08-dioramas-v3.md, section
+Global Constraints). Every registered scene must pass every proxy in ledviz.rubric.THRESHOLDS,
+measured over all its frames.
 Run: python -m pytest -q
 """
 from functools import lru_cache
