@@ -78,7 +78,7 @@ FACES = {  # 10x7 glyphs on the visor screen
     "happy": ["..........", "...E...E..", "..E.E.E.E.", "..........",
               ".K.......K", "...E...E..", "....EEE..."],
 }
-TORSO = [  # behind the desk; chest panel with three status LEDs (x)
+TORSO = [  # behind the desk; chest panel with three status LEDs (g)
     "...BBBBBBBB...",
     ".BBHHHHBBBBBB.",
     "BBHBBBBBBBBBBE",
@@ -96,6 +96,7 @@ ANTENNA = [".r.", "rrr", ".r.", ".d.", ".d.", ".d.", ".d."]
 HAND = ["HH", "BB"]
 FLAT = ["HHH", "BBB"]                          # the hand flattened on Enter
 FIST = ["HHH", "BBB", "BBd"]
+HANDS = {"pump": FIST, "flex": FIST, "slam": FLAT}   # near hand by pose; HAND otherwise
 
 # Arm poses: (shoulder, elbow, hand top-left), screen coords before the PASS bounce
 NEAR = {
@@ -312,9 +313,10 @@ def _robot(c: np.ndarray, i: int, beat: str) -> None:
     _blit(body, FACES[face], 17 + lift + nod, 7)
     _blit(body, ANTENNA, 6 + lift + nod, 7)
     if beat == "run" and i - ENTER >= 2:                        # a nervous drop of sweat runs down
-        y = 14 + i - ENTER + nod                                # the visor side, against black
-        body[y:y + 2, 19:21] = "E"
-        body[y, 19] = "W"
+        y = 14 + i - ENTER                                      # a teardrop on the visor side
+        body[y:y + 2, 18:20] = "E"
+        body[y - 1, 18] = "E"
+        body[y, 18] = "W"
     _keyline(c, body)
     # antenna light: slow blink; rainbow party on PASS
     ay, ax = 7 + lift + nod, 8
@@ -344,14 +346,15 @@ def _arms(c: np.ndarray, i: int, beat: str) -> None:
         arm[lit] = hi                                           # top edge lit, like a tube
         if shade == "B":                                        # shoulder ball
             _blit(arm, [".B.", "BHB", ".B."], sy - 1 + dy, sx - 1)
-        rows = HAND if shade == "d" else FIST if near in ("pump", "flex") else FLAT if near == "slam" else HAND
+        rows = HAND if shade == "d" else HANDS.get(near, HAND)
         _blit(arm, [r.translate(str.maketrans({"H": hi, "B": shade})) for r in rows], hy + dy, hx)
         _keyline(c, arm)
     if beat == "type":                                          # the struck key lights up
         c[39, NEAR["down"][2][0] if i % 2 == 0 else FAR["down"][2][0] + 1] = "W"
     if beat == "slam":                                          # the Enter key goes off
-        for ray in (((31, 21), (32, 21)), ((32, 25), (33, 24)), ((32, 17), (33, 18))):
-            for y, x in ray:                                    # three short rays burst off the key
+        c[39, 23:25] = "W"                                      # the Enter key flashes
+        for ray in (((34, 30), (33, 31)), ((36, 30), (36, 31))):   # in clear black, right of the far hand
+            for y, x in ray:
                 c[y, x] = "Y"
 
 
