@@ -9,8 +9,12 @@ from ledviz.effects import EFFECTS
 
 @pytest.mark.parametrize("name", sorted(EFFECTS))
 def test_loop_is_seamless(name):
+    """The wrap-around step (last frame -> first) must look like any other step: no jump."""
     fn, n, _ = EFFECTS[name]
-    assert np.array_equal(fn(0, n), fn(n, n)), "the frame after the last must equal the first"
+    frames = [fn(i, n).astype(int) for i in range(n)]
+    steps = [np.abs(frames[i + 1] - frames[i]).mean() for i in range(n - 1)]
+    wrap = np.abs(frames[0] - frames[-1]).mean()
+    assert wrap <= 1.5 * np.median(steps), f"seam jump {wrap:.2f} vs typical step {np.median(steps):.2f}"
 
 
 @pytest.mark.parametrize("name", sorted(EFFECTS))

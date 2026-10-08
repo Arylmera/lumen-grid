@@ -1,1 +1,1 @@
-"""Procedural animations for 64x64 LED matrices (Divoom Pixoo 64 and friends)."""
+"""Ave Imperator: a procedural Warhammer 40k shrine scene for 64x64 LED matrices."""
