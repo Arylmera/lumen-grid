@@ -29,7 +29,7 @@ PAL = {
     "0": (0, 0, 0),
     "b": (34, 46, 150), "B": (70, 100, 255),                       # tower and roof outlines
     "M": (255, 36, 170), "m": (120, 14, 84),                       # magenta neon lit / failing
-    "C": (40, 230, 255), "c": (24, 60, 170),                       # cyan neon; deep blue: glass, frames, splashes, searchlight
+    "C": (40, 230, 255), "c": (24, 60, 170),                       # cyan neon; deep blue: glass, frames, splashes
     "Y": (255, 206, 40), "O": (255, 120, 20), "o": (190, 60, 10),  # yellow, door glow
     "R": (255, 36, 36), "r": (90, 8, 12), "Q": (255, 36, 36),      # blinking red / off / steady red neon
     "P": (255, 120, 220),                                          # pale pink: awning, umbrella panels
@@ -105,16 +105,15 @@ LEGS = [  # near leg V, far leg d; the second half of the cycle swaps them
      "........dV.............", "........dVV............"],                               # passing
 ]
 WALKER_X = 15
-DRONE = [  # police drone: rotors, white hull, 2 px red/blue strobes, searchlight cone below
+DRONE = [  # police drone: rotors, white hull, 2 px red/blue strobes, a thin searchlight beam
     "WWW...WWW",
     "..BWWWB..",
     "RRWWWWWXX",
     "..B...B..",
-    "...ccc...",
-    "..ccccc..",
-    ".ccccccc.",
+    "....C....",
+    "....C....",
 ]
-DRONE_Y = 9               # flies above the umbrella (rows 17-27) for the whole pass
+DRONE_Y = 1               # top band, half a loop behind the koi: clear of the umbrella, the cat and the </> sign
 SPLASH_POSES = [["C", "C"], ["C.C", "ccc"]]   # spurt, then crown
 
 
@@ -250,7 +249,7 @@ def frame(i: int, n: int = N) -> np.ndarray:
                 img[1 + r, kx + col] = PAL[ch]
     mx = np.broadcast_to((xs + 2 * i) % MID_W, (SIZE, SIZE))
     _paint(img, _mid_frame(i)[:, mx[0]], i, mx)
-    dx = -10 + 3 * (i % N)                           # police drone, red/blue strobe alternates
+    dx = 64 - 3 * ((i + 15) % N)                     # police drone patrols left, red/blue strobe alternates
     lit = {"R": PAL["R"] if i % 2 else PAL["r"], "X": PAL["B"] if i % 2 == 0 else PAL["c"]}
     for r, row in enumerate(DRONE):
         for col, ch in enumerate(row):
