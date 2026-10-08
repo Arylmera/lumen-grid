@@ -1,4 +1,4 @@
-"""Contest constraints + seamless loops. Run: python -m pytest -q"""
+"""Contest and Pixoo constraints + seamless loops. Run: python -m pytest -q"""
 import numpy as np
 import pytest
 from PIL import Image
@@ -9,21 +9,21 @@ from ledviz.effects import EFFECTS
 
 @pytest.mark.parametrize("name", sorted(EFFECTS))
 def test_loop_is_seamless(name):
-    """The wrap-around step (last frame -> first) must look like any other step: no jump."""
+    """Frame n must be frame 0 exactly, so the GIF's wrap from n-1 to 0 is an ordinary step.
+    (A mean-difference check is blind on a pan: every step is already large.)"""
     fn, n, _ = EFFECTS[name]
-    frames = [fn(i, n).astype(int) for i in range(n)]
-    steps = [np.abs(frames[i + 1] - frames[i]).mean() for i in range(n - 1)]
-    wrap = np.abs(frames[0] - frames[-1]).mean()
-    assert wrap <= 1.5 * np.median(steps), f"seam jump {wrap:.2f} vs typical step {np.median(steps):.2f}"
+    assert np.array_equal(fn(n, n), fn(0, n))
 
 
 @pytest.mark.parametrize("name", sorted(EFFECTS))
-def test_frames_are_64x64_and_animated(name):
+def test_fits_the_pixoo(name):
+    """The Pixoo 64 replays only the first ~30-32 frames; 64 colours keeps the art clean."""
     fn, n, _ = EFFECTS[name]
-    a, b = fn(0, n), fn(n // 3, n)
-    assert a.shape == (SIZE, SIZE, 3) and a.dtype == np.uint8
-    assert a.mean() > 2, "frame is essentially black"
-    assert not np.array_equal(a, b), "effect does not move"
+    frames = np.stack([fn(i, n) for i in range(n)])
+    assert n <= 30
+    assert frames.shape[1:] == (SIZE, SIZE, 3) and frames.dtype == np.uint8
+    assert len(np.unique(frames.reshape(-1, 3), axis=0)) <= 64
+    assert not np.array_equal(frames[0], frames[n // 3]), "effect does not move"
 
 
 @pytest.mark.parametrize("name", sorted(EFFECTS))

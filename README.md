@@ -1,53 +1,33 @@
-# Lumen Grid: Warhammer 40,000 on a 64×64 LED matrix
+# Lumen Grid: panning pixel dioramas on a 64×64 LED matrix
 
-Three animated pixel scenes from the 41st millennium, made for the Divoom Pixoo 64. Every pixel is generated in
-code with NumPy and Pillow. The repo has no hand-painted bitmaps and no imported assets. Each GIF loops with no
-seam.
+Small living dioramas for the Divoom Pixoo 64. The camera tracks slowly across a scene built in parallax
+layers while small details move: candles flicker, smoke rises, a servo-skull bobs past. Every pixel is
+placed in code as a hand-drawn pixel map. The repo has no imported bitmaps. Each GIF loops with no seam.
 
-| Astartes | Necron | WAAAGH! |
-|:-:|:-:|:-:|
-| ![astartes](out/astartes_512.gif) | ![necron](out/necron_512.gif) | ![waaagh](out/waaagh_512.gif) |
+| Cathedral-ship nave |
+|:-:|
+| ![nave](out/nave_512.gif) |
 
 ## The scenes
 
-**Astartes**: an Ultramarine in Mk VII power armour stands in front of a burning hive city.
-- The ultramarine-blue helmet is shaded as a 3D volume and lit from the top left. Firelight flickers along its
-  right edge.
-- The angled red eye lenses pulse and bloom.
-- The face has a nose ridge, a mouth grille, twin cheek breathers, panel seams and a gold aquila on the brow.
-- Below: ribbed gorget cables and gold-rimmed pauldrons. One carries the inverted-omega chapter badge, the other
-  a purity seal whose parchment sways.
-- Behind: ruined gothic spires with flickering windows, smoke bands drifting across a blood-red sky, artillery
-  flashes on the horizon and rising embers.
-- A glint sweeps across the helmet once per loop.
-
-**Necron**: an Overlord wakes in his tomb.
-- The living-metal skull is brushed silver with a domed cranium and a centre ridge.
-- Gauss-green eyes burn in deep sockets. The face has a nasal cavity, cheekbone ridges and a grille of metal
-  teeth.
-- A phylactery gem glows on the brow.
-- A striped nemes headdress has energy pulses running down its channels.
-- Ribbed collar plates carry a glowing core that beats.
-- Behind: the tomb wall streams with falling glyphs.
-- A green energy scan passes down the skull. Twice per loop, the reanimation protocols glitch and tear the
-  picture.
-
-**WAAAGH!**: an Ork Boy bellows the war cry.
-- His head is lit from above, with a heavy angry brow and beady red eyes. A stitched scar crosses one eye.
-- He has a flat nose, pointed ears with a brass ring and a riveted plate bolted to his skull.
-- The jaw drops twice per loop to show jagged teeth, a red maw, a tongue and two big tusks. The cheeks stretch
-  as it opens, and the head judders while he roars.
-- He wears spiked shoulder plates with a Goff black-and-white check.
-- Behind: a comic-book burst of rays turns. The **WAAAGH!** title jitters letter by letter and flares on each
-  roar.
+**Cathedral-ship nave**: an endless nave aboard an Imperial starship in the Warhammer 40,000 universe.
+- Each bay has a tall stained-glass lancet showing a saint with a gold halo, a red robe and a gold sword.
+  A band of light sweeps across the panes (colour cycling).
+- Below each lancet is a riveted bronze void-port onto space. Through the ports you see stars, a faint
+  nebula and an escort ship. Once per loop the ship fires a lance strike.
+- Ribbed vaulting meets in gilt bosses overhead. A skull rests in a niche on each pier.
+- On the floor a hooded pilgrim kneels beside a candle stand whose three flames flicker out of step.
+- In the foreground a dark fluted pillar slides past at twice the speed of the wall, which gives the
+  depth. A red banner ripples, a censer swings on its chain and trails incense, and a servo-skull bobs
+  by with a blinking red lens.
 
 ## Run
 
 ```bash
 pip install -r requirements.txt
 python render.py                 # out/<scene>_64.gif (native, 1 pixel = 1 LED) + out/<scene>_512.gif
-python render.py --only necron   # one scene
-python -m pytest -q              # square, ≤ 5 MB, animated, seamless loop
+python render.py --only nave     # one scene
+python -m pytest -q              # Pixoo limits, ≤ 5 MB, square, seamless loop
 ```
 
 | File | Use |
@@ -57,31 +37,31 @@ python -m pytest -q              # square, ≤ 5 MB, animated, seamless loop
 
 ## How it's built
 
-- Each scene is a pure function `frame(i, n)`. Every motion (pulses, particles, rotations, the jaw, glitches)
-  repeats a whole number of times per `n` frames, so the last frame flows into the first. A test checks that
-  the wrap-around step is no bigger than an ordinary frame step. The test was mutation-proven: a deliberately
-  broken loop makes it fail.
-- Shapes are built from implicit geometry: ellipses, tapered profiles and lancet arcs. Symmetric pieces are
-  tested on the distance from the centre line. Volumes are shaded with a pseudo-normal and a Lambert-plus-
-  specular term, then passed through hand-picked colour ramps.
-- Small hand-drawn ASCII stamps cover what geometry can't say: the brow aquila, the chapter badge, teeth, tusks
-  and the title font.
-- **Built for LEDs**: black means the LED is off, every shape gets a dark keyline, each animation has one global
-  GIF palette (no frame-to-frame colour flicker) and there is no dithering (it reads as sparkle on real LEDs).
+- **Pixel maps, not geometry.** Each layer is a grid of characters, one per palette colour, drawn like a
+  sprite in a pixel editor. The code only scrolls the layers, cycles the light colours and places the
+  moving props.
+- **Parallax that loops exactly.** The void behind the ports stays fixed on screen: stars at infinity
+  don't move when the camera moves. The wall moves 1 px per frame and repeats every 30 px. The
+  foreground moves 2 px per frame and repeats every 60 px. In 30 frames each layer shifts exactly one
+  tile, and every other motion (flicker, smoke, sway, bob, blink) has a period that divides 30. A test
+  checks that frame 30 is identical to frame 0. The test was mutation-proven: a pan that stops one pixel
+  short makes it fail.
+- **Built for the Pixoo.** The device replays only the first 30–32 frames of a GIF, so each scene is
+  30 frames at 10 fps. Movement is in whole-pixel steps, because fractional steps shimmer on LEDs. The
+  palette stays under 64 colours, there is no dithering, and the scene is mostly black, because black
+  means the LED is off. Light comes from small saturated sources.
 
 ```
-ledviz/core.py              grid, drawing kit (ramp, edge, dilate, glow, sprite), GIF export
-ledviz/scenes/astartes.py   Space Marine
-ledviz/scenes/necron.py     Necron Overlord
-ledviz/scenes/ork.py        Ork Boy
-ledviz/effects.py           scene registry (frames, fps)
-render.py                   CLI renderer
-tests/                      contest constraints + seamless-loop check
+ledviz/core.py          grid size, GIF export
+ledviz/scenes/nave.py   cathedral-ship nave
+ledviz/effects.py       scene registry (frames, fps)
+render.py               CLI renderer
+tests/                  Pixoo limits + seamless-loop check
 ```
 
 ## Credits
 
-- Unofficial fan art inspired by the Warhammer 40,000 universe. It is not affiliated with or endorsed by Games
-  Workshop. Every figure is drawn from scratch; no official artwork, logos or assets are used.
+- Unofficial fan art inspired by the Warhammer 40,000 universe. It is not affiliated with or endorsed by
+  Games Workshop. Everything is drawn from scratch; no official artwork, logos or assets are used.
 - Target hardware: [Divoom Pixoo 64](https://divoom.com/products/pixoo-64).
 - [Pillow](https://python-pillow.org/) and [NumPy](https://numpy.org/).
