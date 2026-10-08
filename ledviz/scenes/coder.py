@@ -4,7 +4,7 @@ Built for LED contrast: the room is true black, lit only by the monitor, the RGB
 neon trim. Every lit thing is a saturated shape; white is kept to small highlights. Static camera:
 the story beats carry the loop.
 
-    window      top right: crescent moon, twinkling stars, a skyline with lit windows
+    window      top right: full moon, twinkling stars, a skyline with lit windows
     monitor     syntax-highlighted code scrolls up 1 px/frame (30-row tile); the newest line types
                 itself out behind a blinking cursor. f16 a test pane opens, f22 the screen turns
                 into a green PASS with a check mark
@@ -53,20 +53,20 @@ FONT = {  # 3x5, Z is the ink; I is 1 px wide
 }
 
 HEAD = [  # three-quarter view facing the monitor: ear bolt on the left, visor screen on the right
-    "....BBBBBBBB....",
-    "..BBHHHBBBBBBB..",
-    ".BHHBBBBBBBBBBB.",
-    ".BHBBnnnnnnnnnnB",
+    ".BBBBBBBBBBBBBB.",
+    "BHHHHHHHBBBBBBBB",
+    "BHBBBBBBBBBBBBBB",
+    "BHdBBnnnnnnnnnnB",
     "BHBBn0000000000n",
     "BBBBn0000000000n",
     "BddBn0000000000n",
     "dHHdn0000000000n",
     "BddBn0000000000n",
     "BBBBn0000000000n",
-    "dBBBn0000000000n",
+    "dHdBn0000000000n",
     "dBBBBnnnnnnnnnnB",
-    ".dBBBBBBBBBBBBd.",
-    "..dddddddddddd..",
+    "dBBBBBnBnBnBnBBd",
+    ".dddddddddddddd.",
 ]
 FACES = {  # 10x7 glyphs on the visor screen
     "look": ["..........", "....EE..EE", "....EE..EE", "....EE..EE",
@@ -83,7 +83,7 @@ TORSO = [  # behind the desk; chest panel with three status LEDs (x)
     ".BBHHHHBBBBBB.",
     "BBHBBBBBBBBBBE",
     "BHBBkkkkkkBBBE",
-    "BHBBkxkxkxBBBE",
+    "BHBBkgkgkgBBBE",
     "BHBBkkkkkkBBBE",
     "BHBBBBBBBBBBBE",
     "dBBBBBBBBBBBBE",
@@ -92,17 +92,18 @@ TORSO = [  # behind the desk; chest panel with three status LEDs (x)
     "ddBBBBBBBBBBdd",
     "ddBBBBBBBBBBdd",
 ]
-ANTENNA = [".A.", "AAA", ".A.", ".d.", ".d.", ".d.", ".d."]
+ANTENNA = [".r.", "rrr", ".r.", ".d.", ".d.", ".d.", ".d."]
 HAND = ["HH", "BB"]
+FLAT = ["HHH", "BBB"]                          # the hand flattened on Enter
 FIST = ["HHH", "BBB", "BBd"]
 
 # Arm poses: (shoulder, elbow, hand top-left), screen coords before the PASS bounce
 NEAR = {
-    "down": ((14, 30), (17, 35), (21, 37)), "up": ((14, 30), (17, 34), (21, 36)),
-    "wind": ((14, 30), (19, 31), (21, 27)), "slam": ((14, 30), (17, 35), (21, 37)),
+    "down": ((14, 30), (17, 35), (21, 37)), "up": ((14, 30), (17, 33), (21, 34)),
+    "wind": ((14, 30), (19, 31), (21, 27)), "slam": ((14, 30), (18, 35), (20, 38)),
     "pump": ((14, 30), (20, 26), (19, 17)), "flex": ((14, 30), (20, 28), (20, 21)),
 }
-FAR = {"down": ((17, 31), (22, 34), (27, 37)), "up": ((17, 31), (22, 33), (27, 36)),
+FAR = {"down": ((17, 31), (22, 34), (27, 37)), "up": ((17, 31), (22, 32), (27, 34)),
        "rest": ((17, 31), (22, 34), (27, 37))}
 
 CODE = [  # (indent, tokens): 10 lines of 3 rows = the 30-row scrolling tile
@@ -237,7 +238,7 @@ def _screen(i: int, beat: str) -> np.ndarray:
         if p % 2:                                              # glint on the tick
             s[11, 16:18] = "W"
         return s
-    scroll = i if beat == "type" else ENTER                   # typing stops when the tests run
+    scroll = i if beat == "type" else ENTER - 1               # typing stops on the wind-up
     rows = TILE[(np.arange(SCR_H) + scroll) % 30]
     for k, (indent, toks) in enumerate(CODE):
         top = (3 * k - scroll) % 30
@@ -246,10 +247,10 @@ def _screen(i: int, beat: str) -> np.ndarray:
         elif top >= TYPE_ROW:                                  # being typed: reveal 1/3 per frame
             shown = 2 + indent + len(toks) * (TYPE_ROW + 3 - top) // 3
             rows[top:top + 2, shown:] = "."
-            if i % 6 < 3 or beat != "type":
+            if i % 6 < 3:
                 rows[top:top + 2, min(shown + 1, SCR_W - 2)] = "W"   # cursor
     s[:] = rows
-    if beat in ("slam", "run"):                                # test pane slides up from the bottom
+    if beat in ("slam", "run"):                                # test pane opens on Enter (f16)
         p = i - ENTER
         s[12:, :] = "."
         s[12, :] = "v"
@@ -287,12 +288,12 @@ def _window(c: np.ndarray, i: int) -> None:
 
 
 def _steam(c: np.ndarray, i: int) -> None:
-    for x0, ph in ((56, 0), (59, 5)):
-        for k in range(2):
-            t = (i + ph + 5 * k) % 10                           # 1 px/frame, 10 frame rise
-            y = 26 - t
-            x = x0 + SWAY[(t + ph) % 10]
-            c[y:y + 2, x] = "s"
+    """Two wavy columns; the wave and a gap between puffs both rise 1 px/frame."""
+    for x0, ph in ((55, 0), (60, 3)):
+        for y in range(19, 28):
+            k = (y + i + ph) % 10
+            if k:
+                c[y, x0 + SWAY[k]] = "s"
 
 
 def _robot(c: np.ndarray, i: int, beat: str) -> None:
@@ -311,7 +312,9 @@ def _robot(c: np.ndarray, i: int, beat: str) -> None:
     _blit(body, FACES[face], 17 + lift + nod, 7)
     _blit(body, ANTENNA, 6 + lift + nod, 7)
     if beat == "run" and i - ENTER >= 2:                        # a nervous drop of sweat runs down
-        body[14 + i - ENTER:16 + i - ENTER, 1] = "E"
+        y = 14 + i - ENTER + nod                                # the visor side, against black
+        body[y:y + 2, 19:21] = "E"
+        body[y, 19] = "W"
     _keyline(c, body)
     # antenna light: slow blink; rainbow party on PASS
     ay, ax = 7 + lift + nod, 8
@@ -341,22 +344,22 @@ def _arms(c: np.ndarray, i: int, beat: str) -> None:
         arm[lit] = hi                                           # top edge lit, like a tube
         if shade == "B":                                        # shoulder ball
             _blit(arm, [".B.", "BHB", ".B."], sy - 1 + dy, sx - 1)
-        rows = FIST if near in ("pump", "flex") and shade == "B" else HAND
+        rows = HAND if shade == "d" else FIST if near in ("pump", "flex") else FLAT if near == "slam" else HAND
         _blit(arm, [r.translate(str.maketrans({"H": hi, "B": shade})) for r in rows], hy + dy, hx)
         _keyline(c, arm)
     if beat == "type":                                          # the struck key lights up
         c[39, NEAR["down"][2][0] if i % 2 == 0 else FAR["down"][2][0] + 1] = "W"
     if beat == "slam":                                          # the Enter key goes off
-        c[39, 21:23] = "W"
-        for y, x in ((33, 18), (34, 19), (31, 22), (32, 22), (33, 26), (34, 25)):
-            c[y, x] = "Y"                                       # a burst of rays over the key
+        for ray in (((31, 21), (32, 21)), ((32, 25), (33, 24)), ((32, 17), (33, 18))):
+            for y, x in ray:                                    # three short rays burst off the key
+                c[y, x] = "Y"
 
 
 def _confetti(c: np.ndarray, i: int) -> None:
     for k, (x, y0) in enumerate(((1, 0), (4, -5), (12, 2), (16, -3), (20, 0), (7, -1), (2, -9), (18, -8))):
         y = y0 + 2 * (i - PASS)                                 # 2 px/frame, only during PASS
         if 0 <= y < 11:
-            c[y:y + 2, x] = RAINBOW[(k + i) % 6]
+            c[y:y + 2, x:x + 2] = RAINBOW[(k + i) % 6]
 
 
 def _keyboard(c: np.ndarray, i: int, beat: str) -> None:
