@@ -105,15 +105,15 @@ PAULDRON = [  # a low shoulder plate over one lower lame, no gold: the eye stays
 TROOPER = [[".G.", ".k.", "kkk", ".k.", "k.k"], [".G.", ".k.", "kk.", ".k.", ".k."]]  # fleeing guardsman, 2 run poses
 TROOPERS = (0, 8, 50)                            # track x0: run left at 3 px/frame on a 90 px track
 BOLTER = [  # near arm: slim red forearm into a mega-bolter with three barrels
-    "..aAAAa......................",
-    "..aAAAa......................",
-    "..aAAAAaammmmmm..............",
-    "..aggggAamMMMMm0SSSSSSSSSSSM.",
-    "..aaaaaaamMSMMm0mmmmmmmmmmm..",
-    ".........mMMMMm0SSSSSSSSSSSM.",
-    ".........mMMMMm0mmmmmmmmmmm..",
-    ".........mMMMMm0SSSSSSSSSSSM.",
-    ".........mmmmmm..............",
+    "..aAAAa.................",
+    "..aAAAa.................",
+    "..aAAAAaammmmmm.........",
+    "..aggggAamMMMMm0SSSSSSM.",
+    "..aaaaaaamMSMMm0mmmmmm..",
+    ".........mMMMMm0SSSSSSM.",
+    ".........mMMMMm0mmmmmm..",
+    ".........mMMMMm0SSSSSSM.",
+    ".........mmmmmm.........",
 ]
 LASER = [  # far arm: red housing, turbo-laser barrel with cooling rings and a lens tip
     "aAAAAAAAa................",
@@ -123,11 +123,11 @@ LASER = [  # far arm: red housing, turbo-laser barrel with cooling rings and a l
 ]
 BANNER = [  # hangs between the hips: gold-edged black field, gold skull-cog, red band, swallowtail
     "ggggggg",
-    "g0GGG0g",
-    "gGGGGGg",
-    "gG0G0Gg",
-    "gGGGGGg",
-    "g0G0G0g",
+    "g0ggg0g",
+    "ggggggg",
+    "gg0g0gg",
+    "ggggggg",
+    "g0g0g0g",
     "g00000g",
     "gAAAAAg",
     "gAAAAAg",
