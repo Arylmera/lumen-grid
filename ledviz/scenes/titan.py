@@ -6,8 +6,8 @@ armour, gold trim, fire, blue plasma, a magenta turbo-laser beam).
     sky         fixed on screen: true black over a low red horizon glow, rising embers
     hive        1 px/frame, 30 px tile: gothic black towers rim-lit by fire (spire, broken arch,
                 cathedral with a rose window), flickering windows, fire columns at the base
-    rubble      2 px/frame, 60 px tile: ground line, debris and a burning tank wreck
-    troopers    3 px/frame on screen: tiny guardsmen flee past the Titan's feet, for scale
+    rubble      2 px/frame, 60 px tile: ground line and debris
+    troopers    3 px/frame on screen: keylined guardsmen flee past the Titan's feet, for scale
     titan       fixed on screen, black keyline: 10-frame stride (planted foot rides the ground,
                 the other lifts and swings, the body sinks on each footfall), crenellated
                 carapace with spires, low brooding head with a green eye slit, pulsing plasma
@@ -34,14 +34,16 @@ PAL = {
     "e": (170, 48, 0), "w": (255, 150, 30),                       # fire rim light, lit windows
     "h": (90, 12, 0),                                             # horizon glow
     "P": (40, 110, 255),                                          # plasma (recoloured per frame)
+    "k": (70, 200, 40),                                           # guardsman fatigues
 }
 FIRE = [(120, 12, 0), (220, 44, 0), (255, 112, 0), (255, 196, 40), (255, 250, 190)]
 FLICK = [3, 2, 4, 3, 2, 1, 3, 4, 2, 3]          # period 10
 PLASMA = [(40, 110, 255), (120, 190, 255), (220, 240, 255)]
 PULSE = [0, 1, 2, 1, 0]                          # reactor, period 5
 BEAM = [(150, 20, 120), (255, 70, 200), (255, 255, 255)]
-SHOTS = (3, 18)                                  # turbo-laser fires twice per loop
-HIT_X, HIT_Y = 61, 31                            # lands on the spire, then on the cathedral
+SHOTS = (1, 16)                                  # turbo-laser fires twice per loop
+HIT_X, HIT_Y = 63, 32                            # lands on the spire, then on the cathedral
+YY, XX = np.mgrid[0:SIZE, 0:SIZE]
 
 # Titan parts, all facing right. The body origin (OX, oy) is the carapace's top-left corner.
 CARAPACE = [
@@ -90,49 +92,52 @@ PELVIS = [
     "aAAAAAAAAAAAAAa",
     ".aaaaaaaaaaaaa.",
 ]
-PAULDRON = [  # a domed shoulder plate over one lower lame
-    "...gggggg...",
-    ".ggRRRRRRgg.",
-    "gRRRAAAAAAAg",
-    "gRAAAAAAAAAg",
-    "gAAAAAAAAAAg",
-    "gaAAAAAAAAag",
-    "gggggggggggg",
-    ".gaAAAAAAag.",
-    "..gggggggg..",
+PAULDRON = [  # a low shoulder plate over one lower lame, no gold: the eye stays the focal point
+    "..aaaaaaaa..",
+    ".aRRRRRRRRa.",
+    "aRAAAAAAAAAa",
+    "aAAAAAAAAAAa",
+    "aaAAAAAAAAaa",
+    ".aaaaaaaaaa.",
+    ".aAAAAAAAAa.",
+    "..aaaaaaaa..",
 ]
-TROOPER = [["G.", "M.", "MM", "m."], ["G.", "M.", "M.", ".m"]]   # fleeing guardsman, 2 run poses
-TROOPERS = ((0, GROUND - 4), (7, GROUND - 4), (50, GROUND - 4))   # (x0, top): run at 3 px/frame
-BOLTER = [  # near arm: red forearm into a mega-bolter with three barrels
+TROOPER = [[".G.", ".k.", "kkk", ".k.", "k.k"], [".G.", ".k.", "kk.", ".k.", ".k."]]  # fleeing guardsman, 2 run poses
+TROOPERS = (0, 8, 50)                            # track x0: run left at 3 px/frame on a 90 px track
+BOLTER = [  # near arm: slim red forearm into a mega-bolter with three barrels
     "..aAAAa......................",
     "..aAAAa......................",
-    "aaAAAAAaammmmmm..............",
-    "aAgggggAamMMMMm0SSSSSSSSSSSM.",
-    "aAAAAAAAamMSMMm0mmmmmmmmmmm..",
-    "aAAAAAAAamMMMMm0SSSSSSSSSSSM.",
-    ".aaaaaaa.mMMMMm0mmmmmmmmmmm..",
+    "..aAAAAaammmmmm..............",
+    "..aggggAamMMMMm0SSSSSSSSSSSM.",
+    "..aaaaaaamMSMMm0mmmmmmmmmmm..",
+    ".........mMMMMm0SSSSSSSSSSSM.",
+    ".........mMMMMm0mmmmmmmmmmm..",
     ".........mMMMMm0SSSSSSSSSSSM.",
     ".........mmmmmm..............",
 ]
-LASER = [  # far arm: red housing, long turbo-laser barrel with cooling rings and a lens tip
-    "aAAAAAAAa...................",
-    "aAAggggAammmmmmmmmmmmmmmmmm.",
-    "aAAAAAAAamMMMMgMMMMgMMMMgMSS",
-    "aaaaaaaaammmmmmmmmmmmmmmmmm.",
+LASER = [  # far arm: red housing, turbo-laser barrel with cooling rings and a lens tip
+    "aAAAAAAAa................",
+    "aAAggggAammmmmmmmmmmmmmm.",
+    "aAAAAAAAamMMMMgMMMMgMMMSS",
+    "aaaaaaaaa................",
 ]
-BANNER = [  # hangs from the hips on a gold bar: Legio red and black, gold skull-cog, swallowtail
-    "ggggggggg",
-    ".aAAA000.",
-    ".aAgGg00.",
-    ".aGGGGG0.",
-    ".agG0G0g.",
-    ".aGGGGG0.",
-    ".aAGgG00.",
-    ".aAgGg00.",
-    ".aAAA000.",
-    ".aAAA000.",
-    ".aAA.000.",
-    ".aA...00.",
+BANNER = [  # hangs between the hips: gold-edged black field, gold skull-cog, red band, swallowtail
+    "ggggggg",
+    "g0GGG0g",
+    "gGGGGGg",
+    "gG0G0Gg",
+    "gGGGGGg",
+    "g0G0G0g",
+    "g00000g",
+    "gAAAAAg",
+    "gAAAAAg",
+    "g00000g",
+    "g00000g",
+    "gAAAAAg",
+    "g00000g",
+    "g00g00g",
+    "g0g.g0g",
+    ".g...g.",
 ]
 KNEE = [
     "..gggg..",
@@ -236,7 +241,6 @@ def _rubble() -> np.ndarray:
     for x0, w, h in ((4, 5, 2), (18, 3, 1), (47, 6, 3), (56, 3, 1)):
         c[GROUND - h:GROUND, x0:x0 + w] = "0"
         c[GROUND - h, x0:x0 + w] = "e"
-    stamp(c, ["....mmmm....", "..mmmmmmmm..", "mMMMMMMMMMMm", ".mmmmmmmmmm."], GROUND - 4, 28)  # tank wreck
     return c
 
 
@@ -266,17 +270,19 @@ def _tint(rows: list[str], shade: dict) -> list[str]:
 def _part(c: np.ndarray, rows: list[str], top: int, left: int, line: bool = True) -> None:
     """Stamp a part; line=True first cuts a 1 px black outline into whatever lies behind it."""
     if line:
+        solid = ["".join("." if ch == "." else "0" for ch in r) for r in rows]
         for dy, dx in ((-1, 0), (1, 0), (0, -1), (0, 1)):
-            stamp(c, ["".join("." if ch == "." else "0" for ch in r) for r in rows], top + dy, left + dx)
+            stamp(c, solid, top + dy, left + dx)
     stamp(c, rows, top, left)
 
 
 def _slab(x0: int, y0: int, x1: int, y1: int, w: int, shade: dict) -> list:
     """An armoured limb segment from (x0, y0) down to (x1, y1): shadowed back, lit front edge."""
+    row = "".join(shade.get(ch, ch) for ch in "a" + "A" * (w - 2) + "R")
     rows = []
     for y in range(y0, y1 + 1):
         cx = x0 + ((x1 - x0) * (y - y0) * 2 + (y1 - y0)) // (2 * max(y1 - y0, 1))
-        rows.append((y, cx - w // 2, _tint(["a" + "A" * (w - 2) + "R"], shade)[0]))
+        rows.append((y, cx - w // 2, row))
     return rows
 
 
@@ -302,14 +308,14 @@ def _titan(img: np.ndarray, i: int) -> dict:
     sway = [0, 0, 1, 1, 1, 0, 0, -1, -1, -1][p]   # arms swing against the stride
     c = np.full((SIZE, SIZE), ".", "<U1")
     lx, bx = OX + 18 - sway, OX + 14 + sway
-    _part(c, LASER, oy + 15, lx, False)
+    _part(c, LASER, oy + 17, lx, False)
     _leg(c, OX + 8, oy + 17, (p + 5) % 10, FAR_SHADE)
     _part(c, PELVIS, oy + 13, OX + 4)
     _leg(c, OX + 15, oy + 17, p, NEAR_SHADE)
-    _part(c, BANNER, oy + 18, OX + 6 - sway)
+    _part(c, BANNER, oy + 18, OX + 8 - sway)
     _part(c, REACTOR, oy + 5, OX - 3, False)
     _part(c, CARAPACE, oy, OX, False)
-    _part(c, HEAD, oy + 10, OX + 25)
+    _part(c, HEAD, oy + 8, OX + 25)
     _part(c, BOLTER, oy + 18, bx)
     _part(c, PAULDRON, oy + 9, OX + 11)
     mask = c != "."
@@ -320,7 +326,7 @@ def _titan(img: np.ndarray, i: int) -> dict:
     ring[:, :-1] |= mask[:, 1:]
     img[ring & ~mask] = 0
     _paint(img, c, i, np.zeros((SIZE, SIZE), int))
-    return {"laser": (oy + 17, lx + len(LASER[2])),
+    return {"laser": (oy + 19, lx + len(LASER[2])),
             "bolter": (oy + 23, bx + len(BOLTER[3]))}
 
 
@@ -337,24 +343,27 @@ def frame(i: int, n: int = N) -> np.ndarray:
             _fire(img, GROUND - 1, sx, 6, 8, i, 4 * k)
     rx = np.broadcast_to((xs + 2 * i) % RUB_W, (SIZE, SIZE))
     _paint(img, RUBBLE[:, rx[0]], i, rx)
-    for sx in ((34 - 2 * i) % RUB_W + o for o in (-RUB_W, 0)):  # the wreck burns
-        _fire(img, GROUND - 5, sx, 5, 7, i, 2)
     for y0, x, k in EMBERS:                        # embers rise 2 px/frame and drift right, wrap every 60 rows
         t = (y0 + 2 * i) % 60
         y = 57 - t
         if 0 <= y < SIZE:
             img[y, (x + t // 15) % SIZE] = FIRE[2 + k]
-    for x0, top in TROOPERS:                       # tiny troopers flee left, faster than the ground
+    for x0 in TROOPERS:                            # guardsmen flee left, faster than the ground
         x = (x0 - 3 * i) % 90 - 13
-        for r, row in enumerate(TROOPER[(i + x0) % 2]):
+        pose = TROOPER[(i + x0) % 2]
+        top = GROUND - len(pose)
+        for r, row in enumerate(pose):             # black keyline first, so they read against fire
+            for col, ch in enumerate(row):
+                if ch != ".":
+                    img[top + r - 1:top + r + 2, max(x + col - 1, 0):max(x + col + 2, 0)] = 0
+        for r, row in enumerate(pose):
             for col, ch in enumerate(row):
                 if ch != "." and 0 <= x + col < SIZE:
                     img[top + r, x + col] = PAL[ch]
     guns = _titan(img, i)
     tip_y, tip_x = guns["laser"]
-    yy, xx = np.mgrid[0:SIZE, 0:SIZE]
     for f0 in SHOTS:                               # turbo-laser: charge glow, white core, magenta falloff
-        a = i % N - f0
+        a = (i - f0 + 2) % N - 2                   # -2, -1: charge; 0..2: beam; 1..5: blast
         hit = HIT_X - a                            # the target tower rides the hive layer
         if -2 <= a < 0:
             img[tip_y, tip_x - 2:tip_x] = BEAM[a + 2]
@@ -366,11 +375,11 @@ def frame(i: int, n: int = N) -> np.ndarray:
         b = a - 1                                  # the struck tower erupts
         if 0 <= b < 5:
             r = [1, 2, 4, 5, 5][b]
-            d2 = (yy - HIT_Y) ** 2 + (xx - hit) ** 2
+            d2 = (YY - HIT_Y) ** 2 + (XX - hit) ** 2
             img[d2 <= r * r] = [FIRE[4], FIRE[4], FIRE[3], FIRE[2], FIRE[1]][b]
             if b >= 2:
                 img[d2 <= (r - 2) ** 2] = FIRE[4]
-    if (i - 9) % 15 < 7 and i % 2:                # mega-bolter bursts between the shots
+    if (i - 8) % 15 < 6 and i % 2 == 0:           # mega-bolter: 3 bursts between each pair of shots
         my, mx = guns["bolter"]
         img[my - 2:my + 3, mx:mx + 2] = FIRE[2]      # star-shaped muzzle flash
         img[my - 1:my + 2, mx:mx + 3] = FIRE[3]
