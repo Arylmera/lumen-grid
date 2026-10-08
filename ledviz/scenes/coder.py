@@ -231,7 +231,7 @@ def _screen(i: int, beat: str) -> np.ndarray:
     """The 24x24 screen as chars."""
     s = np.full((SCR_H, SCR_W), ".", "<U1")
     if beat == "pass":
-        p = i - PASS
+        p = (i - PASS) % N
         s[0, :], s[-1, :], s[:, 0], s[:, -1] = ("G" if p % 2 == 0 else "g",) * 4
         _text(s, "PASS", 3, 5, "G")
         check = CHECK if p > 0 else [r[:7] for r in CHECK]    # the tick draws itself in
@@ -252,7 +252,7 @@ def _screen(i: int, beat: str) -> np.ndarray:
                 rows[top:top + 2, min(shown + 1, SCR_W - 2)] = "W"   # cursor
     s[:] = rows
     if beat in ("slam", "run"):                                # test pane opens on Enter (f16)
-        p = i - ENTER
+        p = (i - ENTER) % N
         s[12:, :] = "."
         s[12, :] = "v"
         _text(s, "TEST", 14, 2, "I")
@@ -308,12 +308,12 @@ def _robot(c: np.ndarray, i: int, beat: str) -> None:
     if nod:
         body[13:27] = np.roll(body[13:27], 1, axis=0)
         body[13] = "."
-    face = {"type": "blink" if i in (8, 26) else "look", "wind": "look", "slam": "focus",
+    face = {"type": "blink" if i % N in (8, 26) else "look", "wind": "look", "slam": "focus",
             "run": "focus", "pass": "happy"}[beat]
     _blit(body, FACES[face], 17 + lift + nod, 7)
     _blit(body, ANTENNA, 6 + lift + nod, 7)
-    if beat == "run" and i - ENTER >= 2:                        # a nervous drop of sweat runs down
-        y = 14 + i - ENTER                                      # a teardrop on the visor side
+    if beat == "run" and (i - ENTER) % N >= 2:                  # a nervous drop of sweat runs down
+        y = 14 + (i - ENTER) % N                                # a teardrop on the visor side
         body[y:y + 2, 18:20] = "E"
         body[y - 1, 18] = "E"
         body[y, 18] = "W"
@@ -360,7 +360,7 @@ def _arms(c: np.ndarray, i: int, beat: str) -> None:
 
 def _confetti(c: np.ndarray, i: int) -> None:
     for k, (x, y0) in enumerate(((1, 0), (4, -5), (12, 2), (16, -3), (20, 0), (7, -1), (2, -9), (18, -8))):
-        y = y0 + 2 * (i - PASS)                                 # 2 px/frame, only during PASS
+        y = y0 + 2 * ((i - PASS) % N)                               # 2 px/frame, only during PASS
         if 0 <= y < 11:
             c[y:y + 2, x:x + 2] = RAINBOW[(k + i) % 6]
 
@@ -394,7 +394,7 @@ def _under(c: np.ndarray, i: int) -> None:
     c[59, 4:14] = "m"
     for x in (4, 8, 12):
         c[61, x:x + 2] = "v"
-    tap = 1 if i % 6 < 2 and i < PASS else 0                    # the robot taps its foot
+    tap = 1 if i % 6 < 2 and i % N < PASS else 0                # the robot taps its foot
     for x, shade, hi, toe in ((18, "d", "d", 23), (14, "B", "H", 20)):   # far leg, then near
         leg = np.full((SIZE, SIZE), ".", "<U1")
         up = tap if shade == "B" else 0
@@ -425,24 +425,24 @@ def _under(c: np.ndarray, i: int) -> None:
 
 
 def frame(i: int, n: int = N) -> np.ndarray:
-    # no `i %= n`: every motion is built periodic in N, and the test checks frame(N) == frame(0)
-    t = i % N                                                   # loop clock: the beats are scheduled on it
-    beat = _beat(t)
+    # no `i %= n` up front: continuous motion is periodic in N by construction; only the story
+    # beats (and offsets measured from a beat) read the loop clock i % N
+    beat = _beat(i % N)
     c = np.full((SIZE, SIZE), ".", "<U1")
-    _window(c, t)
-    _steam(c, t)
-    _monitor(c, t, beat)
-    _under(c, t)
-    _robot(c, t, beat)
+    _window(c, i)
+    _steam(c, i)
+    _monitor(c, i, beat)
+    _under(c, i)
+    _robot(c, i, beat)
     _desk(c)
-    _keyboard(c, t, beat)
+    _keyboard(c, i, beat)
     _blit(c, MUG, 28, 51)
     _text(c, "OIL", 31, 54, "Y")
-    hop = 2 if beat == "pass" and t % 2 == 0 else 0
+    hop = 2 if beat == "pass" and i % 2 == 0 else 0
     _blit(c, DUCK, 31 - hop, 43)
-    _arms(c, t, beat)
+    _arms(c, i, beat)
     if beat == "pass":
-        _confetti(c, t)
+        _confetti(c, i)
     img = np.zeros((SIZE, SIZE, 3), np.uint8)
     for ch in np.unique(c):
         if ch != ".":
