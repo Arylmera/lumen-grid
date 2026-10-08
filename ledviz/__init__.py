@@ -1,1 +1,1 @@
-"""Ave Imperator: a procedural Warhammer 40k shrine scene for 64x64 LED matrices."""
+"""Warhammer 40k pixel scenes for 64x64 LED matrices: Astartes, Necron, Ork."""

@@ -1,72 +1,87 @@
-# Lumen Grid: Ave Imperator
+# Lumen Grid: Warhammer 40,000 on a 64×64 LED matrix
 
-A 64×64 LED-matrix animation for the Divoom Pixoo 64, set in the grim darkness of the far future. Every pixel is
-generated in code with NumPy and Pillow. The repo has no hand-drawn bitmaps and no imported assets.
+Three animated pixel scenes from the 41st millennium, made for the Divoom Pixoo 64. Every pixel is generated in
+code with NumPy and Pillow. The repo has no hand-painted bitmaps and no imported assets. Each GIF loops with no
+seam.
 
-![aquila](out/aquila_512.gif)
+| Astartes | Necron | WAAAGH! |
+|:-:|:-:|:-:|
+| ![astartes](out/astartes_512.gif) | ![necron](out/necron_512.gif) | ![waaagh](out/waaagh_512.gif) |
 
-## What's in the frame
+## The scenes
 
-A gilded **double-headed eagle** hangs in a gothic chapel shrine. The scene is drawn back to front:
+**Astartes**: an Ultramarine in Mk VII power armour stands in front of a burning hive city.
+- The ultramarine-blue helmet is shaded as a 3D volume and lit from the top left. Firelight flickers along its
+  right edge.
+- The angled red eye lenses pulse and bloom.
+- The face has a nose ridge, a mouth grille, twin cheek breathers, panel seams and a gold aquila on the brow.
+- Below: ribbed gorget cables and gold-rimmed pauldrons. One carries the inverted-omega chapter badge, the other
+  a purity seal whose parchment sways.
+- Behind: ruined gothic spires with flickering windows, smoke bands drifting across a blood-red sky, artillery
+  flashes on the horizon and rising embers.
+- A glint sweeps across the helmet once per loop.
 
-- **Stone wall** of offset ashlar blocks.
-- **Lancet window**: a pointed arch built from two intersecting circles, with diamond quarry glass in crimson,
-  cobalt and amber held by lead cames. A central mullion and a transom divide it. Each pane breathes on its own
-  phase.
-- **God rays** fall from the window, and dust motes drift down through them.
-- **Altar**: a dark marble slab with gold trim.
-- **Four candles** with shaded wax and drips. Each flame flickers, and its warm glow lights the wall.
-- **Embers** rise and fade as they climb.
-- **The eagle**: every feather is painted as a tapered capsule with its own bronze outline, back to front.
-  Six primaries per wing fan out, with coverts over their roots and a bright leading edge. The heads have hooked,
-  polished beaks and red eyes. A **skull on the breast** has eye sockets that pulse a burning red. A **gold glint**
-  sweeps across the metal once per loop.
-- **Purity seal**: a red wax disc with a stamped ring. Two inked parchment strips hang from it and bend in an
-  unseen draught.
-- **Servo-skull**: it hovers in a slow figure-eight. Its bionic eye glows, a brass implant sits on the cranium, a
-  blue anti-grav glow shines underneath, and a mechadendrite dangles below.
+**Necron**: an Overlord wakes in his tomb.
+- The living-metal skull is brushed silver with a domed cranium and a centre ridge.
+- Gauss-green eyes burn in deep sockets. The face has a nasal cavity, cheekbone ridges and a grille of metal
+  teeth.
+- A phylactery gem glows on the brow.
+- A striped nemes headdress has energy pulses running down its channels.
+- Ribbed collar plates carry a glowing core that beats.
+- Behind: the tomb wall streams with falling glyphs.
+- A green energy scan passes down the skull. Twice per loop, the reanimation protocols glitch and tear the
+  picture.
 
-The animation is a pure function `frame(i, n)`, and every moving part repeats a whole number of times per cycle.
-The GIF therefore **loops with no seam**. A test checks that the wrap from the last frame to the first is no
-bigger
-than an ordinary frame step.
+**WAAAGH!**: an Ork Boy bellows the war cry.
+- His head is lit from above, with a heavy angry brow and beady red eyes. A stitched scar crosses one eye.
+- He has a flat nose, pointed ears with a brass ring and a riveted plate bolted to his skull.
+- The jaw drops twice per loop to show jagged teeth, a red maw, a tongue and two big tusks. The cheeks stretch
+  as it opens, and the head judders while he roars.
+- He wears spiked shoulder plates with a Goff black-and-white check.
+- Behind: a comic-book burst of rays turns. The **WAAAGH!** title jitters letter by letter and flares on each
+  roar.
 
 ## Run
 
 ```bash
 pip install -r requirements.txt
-python render.py                    # out/aquila_64.gif (native) + out/aquila_256.gif (4x preview)
-python render.py --preview-scale 8  # out/aquila_512.gif
-python -m pytest -q                 # square, ≤ 5 MB, animated, seamless loop
+python render.py                 # out/<scene>_64.gif (native, 1 pixel = 1 LED) + out/<scene>_512.gif
+python render.py --only necron   # one scene
+python -m pytest -q              # square, ≤ 5 MB, animated, seamless loop
 ```
 
-| File | Size | Use |
-|---|---|---|
-| `out/aquila_64.gif` | 64×64, ~0.4 MB | Native: one pixel per LED. Send this to the panel. |
-| `out/aquila_256.gif` | 256×256, ~1.9 MB | Nearest-neighbour preview. |
-| `out/aquila_512.gif` | 512×512, ~4.3 MB | Large preview. Square and under the 5 MB limit. |
+| File | Use |
+|---|---|
+| `out/*_64.gif` | Native panel resolution. Send this to the Pixoo. |
+| `out/*_512.gif` | Nearest-neighbour 8× upscale: crisp pixels, square, under 5 MB. |
 
-## Design notes for LED panels
+## How it's built
 
-- **Black means the LED is off.** The scene stays dark and lets gold, flame and red eyes carry the light, which is
-  how it reads on a physical panel.
-- **One global GIF palette** is quantised over all 120 frames. Per-frame palettes make gradients flicker.
-- **No dithering.** At 64×64, dither noise reads as sparkle on real LEDs.
-- **Outlines everywhere.** Every feather, the skull and the seal get a dark keyline, so the shapes still separate
-  at one pixel per LED.
-
-## Layout
+- Each scene is a pure function `frame(i, n)`. Every motion (pulses, particles, rotations, the jaw, glitches)
+  repeats a whole number of times per `n` frames, so the last frame flows into the first. A test checks that
+  the wrap-around step is no bigger than an ordinary frame step. The test was mutation-proven: a deliberately
+  broken loop makes it fail.
+- Shapes are built from implicit geometry: ellipses, tapered profiles and lancet arcs. Symmetric pieces are
+  tested on the distance from the centre line. Volumes are shaded with a pseudo-normal and a Lambert-plus-
+  specular term, then passed through hand-picked colour ramps.
+- Small hand-drawn ASCII stamps cover what geometry can't say: the brow aquila, the chapter badge, teeth, tusks
+  and the title font.
+- **Built for LEDs**: black means the LED is off, every shape gets a dark keyline, each animation has one global
+  GIF palette (no frame-to-frame colour flicker) and there is no dithering (it reads as sparkle on real LEDs).
 
 ```
-ledviz/core.py      grid, gradient palettes, GIF export
-ledviz/effects.py   the scene: eagle builder, backdrop, animated layers
-render.py           CLI renderer
-tests/              contest constraints + seamless-loop check
+ledviz/core.py              grid, drawing kit (ramp, edge, dilate, glow, sprite), GIF export
+ledviz/scenes/astartes.py   Space Marine
+ledviz/scenes/necron.py     Necron Overlord
+ledviz/scenes/ork.py        Ork Boy
+ledviz/effects.py           scene registry (frames, fps)
+render.py                   CLI renderer
+tests/                      contest constraints + seamless-loop check
 ```
 
 ## Credits
 
 - Unofficial fan art inspired by the Warhammer 40,000 universe. It is not affiliated with or endorsed by Games
-  Workshop. The double-headed eagle is drawn from scratch; no official artwork, logos or assets are used.
+  Workshop. Every figure is drawn from scratch; no official artwork, logos or assets are used.
 - Target hardware: [Divoom Pixoo 64](https://divoom.com/products/pixoo-64).
 - [Pillow](https://python-pillow.org/) and [NumPy](https://numpy.org/).

@@ -29,7 +29,7 @@ def test_frames_are_64x64_and_animated(name):
 @pytest.mark.parametrize("name", sorted(EFFECTS))
 def test_gif_is_square_and_under_5mb(name, tmp_path):
     fn, n, fps = EFFECTS[name]
-    path = save_gif([fn(i, n) for i in range(n)], tmp_path / f"{name}.gif", fps=fps, scale=4)
+    path = save_gif([fn(i, n) for i in range(n)], tmp_path / f"{name}.gif", fps=fps, scale=8)
     with Image.open(path) as im:
         assert im.width == im.height
         assert im.n_frames == n

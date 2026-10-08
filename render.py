@@ -1,6 +1,6 @@
 """Render every effect to out/.
 
-    python render.py                 # 64x64 GIFs (what the LED panel shows) + 256x256 previews
+    python render.py                 # 64x64 GIFs (what the LED panel shows) + 512x512 previews
     python render.py --only terra    # one effect
 """
 from __future__ import annotations
@@ -17,7 +17,7 @@ OUT = Path(__file__).parent / "out"
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--only", choices=sorted(EFFECTS))
-    ap.add_argument("--preview-scale", type=int, default=4, help="nearest-neighbour upscale for the preview GIF")
+    ap.add_argument("--preview-scale", type=int, default=8, help="nearest-neighbour upscale for the preview GIF")
     args = ap.parse_args()
 
     for name, (fn, n, fps) in EFFECTS.items():
